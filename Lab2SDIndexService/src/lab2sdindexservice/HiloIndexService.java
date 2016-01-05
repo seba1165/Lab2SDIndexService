@@ -190,6 +190,7 @@ public class HiloIndexService implements Runnable {
                 }
                 //System.out.println(articulo.score);
             }
+            
             //Si la cantidad de resultados obtenidos es menor a la cantidad solicitada en el txt de configuracion
             if (resultado2.size()<cantResultados) {
                 //Se cambia la cantidad de resultados a mostrar por la menor cantidad
@@ -237,18 +238,18 @@ public class HiloIndexService implements Runnable {
                     //Se crea y agrega el articulo al JSON que se enviará al Front Service
                     objResultado.put("resumen", resumen);
                     objResultado.put("title", result.get("title"));
+                    System.out.println(result.get("title"));
                     objResultado.put("_id", result.get("_id"));
                     //System.out.println(objResultado);
                     objResultados.add(objResultado);
                 }
             }
-            
-            System.out.println(objResultados);
-            //Se envia el JSON con los resultados
-            outToClient.writeBytes(objResultados.toJSONString());
-            
-
-            
+            if (cantResultados==0) {
+                outToClient.writeBytes("No hay resultados");
+            }else{
+                //Se envia el JSON con los resultados
+                outToClient.writeBytes(objResultados.toJSONString());
+            }
         } catch (IOException ex) {
             Logger.getLogger(HiloIndexService.class.getName()).log(Level.SEVERE, null, ex);
         }
