@@ -1,0 +1,3 @@
+cachepartition 5
+cantresult 10
+ 
