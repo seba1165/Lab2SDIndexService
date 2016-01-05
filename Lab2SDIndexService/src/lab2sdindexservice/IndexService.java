@@ -14,6 +14,7 @@ import com.mongodb.MongoClient;
 import java.io.*;
 import java.net.*;
 import java.util.logging.*;
+
 public class IndexService {
     public static void main(String args[]) throws IOException {
         //Variables para el Caching Service
@@ -34,24 +35,21 @@ public class IndexService {
             BufferedReader br = new BufferedReader(fr);
 
             //Lineas del Config.txt
+            //Linea 1 tiene la cantidad de particiones de la bd
             String linea1 = br.readLine();
             LineaParticiones = linea1.split(" ");
             canTpart = Integer.parseInt(LineaParticiones[1]);
-
+            //Linea 2 tiene la cantidad de resultados que se desean mostrar como respuesta
             String linea2 = br.readLine();
             LineaCantResultados = linea2.split(" ");
-            cantResult = Integer.parseInt(LineaCantResultados[1]);
-            
+            cantResult = Integer.parseInt(LineaCantResultados[1]);           
+            fr.close();
             //Validacion de parametros del config
             //Si los parametros son menores a 1, el caching service no corre
             if(canTpart<1 || cantResult<1){
                 System.out.println("Ingrese los parametros de forma correcta");
             }else{
-                fr.close();
-                
-
                 System.out.println("Inicializando CachingService... ");
-
                 try {
                     //Socket para el servidor en el puerto 5000
                     acceptSocket = new ServerSocket(5000);
@@ -63,6 +61,7 @@ public class IndexService {
                          //Socket listo para recibir
                         connectionSocket = acceptSocket.accept();
                         System.out.println("Nueva conexión entrante: "+connectionSocket);
+                        //Por cada conexion, se inicia un hilo
                         (new Thread (new HiloIndexService(connectionSocket, idSession, db, canTpart, cantResult))).start();
                         idSession++;
                     }

@@ -11,6 +11,7 @@ import java.util.Comparator;
  *
  * @author Seba
  */
+//Clase para crear el comparador por score acumulado para los articulos
 class ScoreComparator implements Comparator {
     public int compare(Object o1, Object o2) {
         Articulo u1 = (Articulo) o1;

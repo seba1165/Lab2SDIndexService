@@ -9,6 +9,7 @@ package lab2sdindexservice;
  *
  * @author Seba
  */
+//Clase para instanciar los articulos
 class Articulo implements Comparable<Articulo>{
     String title;
     int frecuencia;

@@ -5,18 +5,20 @@
  */
 package lab2sdindexservice;
 
+import java.util.Scanner;
+
 /**
  *
  * @author Seba
  */
-import java.util.*;
 
 
 public class FrontService {
-    //Front Service envia consultas al Caching Service
+    //Front Service envia consultas al Index Service
     public static void main(String[] args) {
-        String query = "arroz leche";
-        int numero;
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Ingrese las palabras de la busqueda: ");
+        String query = scanner.nextLine();
         
         for (int i = 0; i < 1; i++) {
             //String numero_query = Integer.toString(i);

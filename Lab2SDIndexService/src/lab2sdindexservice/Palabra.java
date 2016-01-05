@@ -11,6 +11,7 @@ import java.util.ArrayList;
  *
  * @author Seba
  */
+//Clase para instanciar las palabras junto a su arreglo de articulos
 class Palabra {
     String palabra;
     ArrayList Articulos;

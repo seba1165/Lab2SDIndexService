@@ -17,6 +17,7 @@ import java.util.logging.Logger;
  *
  * @author Seba
  */
+//Clase para los hilos del front service
 public class HiloFrontService implements Runnable{
     protected Socket socketClient;
     protected DataOutputStream outToServer;
@@ -43,9 +44,6 @@ public class HiloFrontService implements Runnable{
             outToServer = new DataOutputStream(socketClient.getOutputStream());
             //dis = new DataInputStream(sk.getInputStream());
             inFromServer = new BufferedReader(new InputStreamReader(socketClient.getInputStream()));
-            
-            //Leemos del cliente y lo mandamos al servidor
-            //sentence = inFromUser.readLine();
             
             String[] requests = {
             "GET /respuestas/", // <p>hola mundo</>
