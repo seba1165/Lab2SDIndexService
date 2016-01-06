@@ -1,6 +1,7 @@
 # Lab2SDIndexService
 Proyecto para correr el Index Service y utilizar la bd de mongo.
 
+Para correr el programa se deben incluir las librerias JSon Simple 1.1.1 y mongo-java-driver 3.0.4
 Para correr el programa del proyecto Lab2SDIndexService, se debe tener el archivo Config.txt en la carpeta raíz del proyecto.
 El archivo Config.txt debe contener las siguientes lineas:
   cachepartition N
