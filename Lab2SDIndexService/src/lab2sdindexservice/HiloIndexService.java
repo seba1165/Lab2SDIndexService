@@ -316,7 +316,7 @@ public class HiloIndexService implements Runnable {
                     //Se agrega al arreglo de resultados
                     resultado.add(articuloEnArregloResultado);
                     aux.add(title);
-                    System.out.println(title+" "+score);
+                    //System.out.println(title+" "+score);
                 }
             }
             
@@ -326,7 +326,7 @@ public class HiloIndexService implements Runnable {
                 articulo+=1;
             }
         }
-        System.out.println(resultado.size());
+        //System.out.println(resultado.size());
         return resultado;
     }
 
