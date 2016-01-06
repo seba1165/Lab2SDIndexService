@@ -135,16 +135,20 @@ public class HiloIndexService implements Runnable {
                 //Si el query existe en la bd
                 if (querys[i]!=null){
                     Articulos = new ArrayList(); 
-                    String delimitadores = "[:,\"{}\\[\\]]+"; 
+                    String delimitadores = "[,\"{}\\[\\]]+"; 
                     //Se eliminan los caracteres inservibles de los articulos que contienen la palabra
                     String[] palabrasSeparadas = querys[i].get("articulos").toString().split(delimitadores);
                     for (int j = 0; j < palabrasSeparadas.length-1; j++) {
                         if (palabrasSeparadas[j].length()!=0 && !palabrasSeparadas[j].equals(" ")){
                             //System.out.println(palabrasSeparadas[j]);
+                            //System.out.println(palabrasSeparadas[j]);
                             //Si antes la palabra era title, ahora se lee y guarda el titulo
-                            if (auxTitle==1) {
+                            if (auxTitle==2) {
                                 title = palabrasSeparadas[j];
+                                //System.out.println(title);
                                 auxTitle=0;
+                            }else if(auxTitle==1){
+                                auxTitle+=1;
                             }
                             //Si antes la palabra era frecuencia, ahora se lee y guarda la frecuencia
                             if (auxFrecuencia==1) {
@@ -155,7 +159,7 @@ public class HiloIndexService implements Runnable {
                                 Indice[i].Articulos.add(articulo);
                                 auxFrecuencia = 0;
                             }
-                            //Si se lee la palabra title, despues vendra el titulo
+                            //Si se lee la palabra title, despues vendra : y despues el titulo
                             if (palabrasSeparadas[j].equals("title")) {
                                 auxTitle+=1;
                             }
@@ -171,7 +175,7 @@ public class HiloIndexService implements Runnable {
             }
 
             //Se calculan los mejores resultados
-            ArrayList resultado = calculaMejores(Indice, db, particiones);
+            ArrayList resultado = calculaMejores(Indice, db, particiones, cantResultados);
             ArrayList<String> resultado2 = new ArrayList<String>();
             //Se ordenan los resultados segun el score acumulado
             Collections.sort(resultado, new ScoreComparator()); 
@@ -206,11 +210,13 @@ public class HiloIndexService implements Runnable {
                 JSONObject objResultado = new JSONObject();
                 //Posicion en la particion de la bd segun el titulo del articulo
                 int posicion = funcion_hash(resultado2.get(i), particiones);
+                //System.out.println(posicion);
                 String coleccionIndice = "Wikipedia"+posicion;
                 DBCollection Wikipedia =  db.getCollection(coleccionIndice);
                 BasicDBObject query = new BasicDBObject();
                 //System.out.println(palabras[i]);
                 query.put("title", resultado2.get(i));
+                //System.out.println(resultado2.get(i));
                 //Se busca el articulo
                 DBObject result = Wikipedia.findOne(query);
                 if (result != null) {
@@ -238,7 +244,7 @@ public class HiloIndexService implements Runnable {
                     //Se crea y agrega el articulo al JSON que se enviará al Front Service
                     objResultado.put("resumen", resumen);
                     objResultado.put("title", result.get("title"));
-                    System.out.println(result.get("title"));
+                    System.out.println((i+1)+". "+result.get("title"));
                     objResultado.put("_id", result.get("_id"));
                     //System.out.println(objResultado);
                     objResultados.add(objResultado);
@@ -267,8 +273,9 @@ public class HiloIndexService implements Runnable {
     }
 
     //Metodo que calcula los mejores resultados para la busqueda realizada
-    private static ArrayList calculaMejores(Palabra[] Indice, DB db, int particiones) {
+    private static ArrayList calculaMejores(Palabra[] Indice, DB db, int particiones, int cantResultados) {
         ArrayList resultado =  new ArrayList();
+        ArrayList<String> aux = new ArrayList<String>();
         int cont = 0;
         int menor = -1;
         //Primero se ve que palabra tiene menor cantidad de articulos
@@ -280,23 +287,27 @@ public class HiloIndexService implements Runnable {
                     menor = Indice[i].Articulos.size();
             }
         }
-        //Para cada palabra
-        for (int i = 0; i < Indice.length; i++) {
-            //Arreglo de articulos de la palabra
-            ArrayList arreglo = Indice[i].Articulos;
-            //Hasta la menor cantidad de articulos de las palabras
-            for (int j = 0; j < menor; j++) {
-                if (arreglo.size()!=0) {
-                    //Se obtiene el titulo y frecuencia del primer articulo del arreglo
-                    Articulo articuloArreglo = (Articulo)arreglo.get(j);
-                    String title = articuloArreglo.getTitle();
-                    int frecuencia = articuloArreglo.getFrecuencia();
-                    //System.out.println(title+" "+frecuencia);
-                    //System.out.println(frecuencia+" para "+ Indice[i].palabra + " en "+ title );
+        if (menor>cantResultados) {
+            menor = cantResultados;
+        }
+        //Procedimiento para ir revisando los primeros articulos de cada palabra
+        //Los articulo estan ordenados por frecuencia de aparicion de dicha palabra
+        //por lo que se asume que los primeros articulos de cada palabra seran mejores
+        //candidatos a mejor resultado que los demas.
+        int palabra=0;
+        int articulo=0;
+        while (resultado.size()<cantResultados) {            
+            ArrayList arreglo = Indice[palabra].Articulos;
+            if (arreglo.size()!=0) {
+                //Se obtiene el titulo y frecuencia del articulo correspondiente del arreglo
+                Articulo articuloArreglo = (Articulo)arreglo.get(articulo);
+                String title = articuloArreglo.getTitle();
+                int frecuencia = articuloArreglo.getFrecuencia();
+                if (!aux.contains(title)){
                     int score=frecuencia;
                     //Se buscan las demas palabras en el mismo articulo y se suman estas frecuencias en caso de existir
                     for (int k = 0; k < Indice.length; k++) {
-                        if (i!=k) {
+                        if (palabra!=k) {
                             score += buscaEnArticulo(Indice[k].palabra, title, db, particiones); 
                         }
                     }
@@ -304,12 +315,18 @@ public class HiloIndexService implements Runnable {
                     Articulo articuloEnArregloResultado = new Articulo(title, score);
                     //Se agrega al arreglo de resultados
                     resultado.add(articuloEnArregloResultado);
-                    
+                    aux.add(title);
+                    System.out.println(title+" "+score);
                 }
             }
-            //System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
             
+            palabra+=1;
+            if (palabra==Indice.length) {
+                palabra=0;
+                articulo+=1;
+            }
         }
+        System.out.println(resultado.size());
         return resultado;
     }
 

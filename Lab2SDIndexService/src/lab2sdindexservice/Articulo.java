@@ -16,8 +16,10 @@ class Articulo implements Comparable<Articulo>{
     int score;
 
     Articulo(String title, String frecuencia) {
+        String delimitadores = "[: ]+"; 
         this.title = title;
-        String split[] = frecuencia.split(" ");
+        String split[] = frecuencia.split(delimitadores);
+        //System.out.println(split[1]);
         this.frecuencia = Integer.parseInt(split[1]);
     }
 
