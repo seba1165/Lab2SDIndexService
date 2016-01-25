@@ -4,9 +4,12 @@ Proyecto para correr el Index Service y utilizar la bd de mongo.
 Para correr el programa se deben incluir las librerias JSon Simple 1.1.1 y mongo-java-driver 3.0.4
 Para correr el programa del proyecto Lab2SDIndexService, se debe tener el archivo Config.txt en la carpeta raíz del proyecto.
 El archivo Config.txt debe contener las siguientes lineas:
-  cachepartition N
+  cantpartition N
   cantresult M
-Donde N será la cantidad de particiones de la bd de articulos y del índice invertido y M la cantidad de resultados que se quieran mostrar para una búsqueda determinada
+  ipCaching 192.168.1.37
+  portCaching 8090
+  port 8090
+Donde N será la cantidad de particiones de la bd de articulos y del índice invertido y M la cantidad de resultados que se quieran mostrar para una búsqueda determinada. Luego, en la siguiente linea, se debe especificar la ip del equipo que tiene el caching service. En la penultima linea, se indica el puerto del cahing service, y en la ultima el puerto del Index para escuchar mensajes del Front Service. 
 
 Una vez corriendo el Index Service, se debe correr el Front Service, del mismo proyecto, para poder ingresar las palabras que se deseen para una búsqueda.
 
