@@ -28,23 +28,27 @@ public class HiloIndexService implements Runnable {
     BufferedReader inFromClient;
     String fromClient;
     String processedData;
+    String ipCaching;
+    String puertoCaching;
     //Id del hilo 
     private int idSession;
     //Atributos para el manejo del cache
     int particiones;
     int cantResultados;
-   
+    private DataOutputStream salidaCaching;
     //String para mensaje enviado por el cliente;
     String request;
     //Base de datos
     DB db;
     
-    public HiloIndexService(Socket socket, int id, DB db, int particiones, int cantResultados) throws IOException {
+    public HiloIndexService(Socket socket, String ipCaching, String puertoCaching, int id, DB db, int particiones, int cantResultados) throws IOException {
         this.socket = socket;
         this.idSession = id;
         this.db = db;
         this.particiones = particiones;
         this.cantResultados = cantResultados;
+        this.ipCaching = ipCaching;
+        this.puertoCaching = puertoCaching;
     }
 
     public void desconnectar() {
@@ -200,6 +204,17 @@ public class HiloIndexService implements Runnable {
                 //Se cambia la cantidad de resultados a mostrar por la menor cantidad
                 cantResultados = resultado2.size();
             }
+            //Se guarda el primero para mandarlo al cache
+            //System.out.println(resultado2.get(i));
+            int posicion = funcion_hash(resultado2.get(0), particiones);
+            String coleccionIndicePr = "Wikipedia"+posicion;
+            BasicDBObject queryPrimero = new BasicDBObject();
+            queryPrimero.put("title", resultado2.get(0));
+            DBCollection WikipediaPr =  db.getCollection(coleccionIndicePr);
+            //Se busca el articulo
+            DBObject resultPr = WikipediaPr.findOne(queryPrimero);
+            String titlePrimero = resultado2.get(0);
+            String textPrimero = resultPr.get("text").toString();
             //Se agregan los mejores resultados al JSON de respuesta
             System.out.println("===========");
             System.out.println(cantResultados+" Mejores");
@@ -209,7 +224,7 @@ public class HiloIndexService implements Runnable {
             for (int i = 0; i < cantResultados; i++) {
                 JSONObject objResultado = new JSONObject();
                 //Posicion en la particion de la bd segun el titulo del articulo
-                int posicion = funcion_hash(resultado2.get(i), particiones);
+                posicion = funcion_hash(resultado2.get(i), particiones);
                 //System.out.println(posicion);
                 String coleccionIndice = "Wikipedia"+posicion;
                 DBCollection Wikipedia =  db.getCollection(coleccionIndice);
@@ -251,10 +266,24 @@ public class HiloIndexService implements Runnable {
                 }
             }
             if (cantResultados==0) {
-                outToClient.writeBytes("No hay resultados");
+                Socket socketCaching = new Socket(InetAddress.getByName(ipCaching), 8090);
+                salidaCaching = new DataOutputStream(socketCaching.getOutputStream());
+                salidaCaching.writeBytes("No Hay Resultados");
+                outToClient.writeBytes("No hay resultados"); 
+                socketCaching.close();
             }else{
-                //Se envia el JSON con los resultados
+                //Se envia el JSON con el mejor resultado al cache
+                //System.out.println(titlePrimero);
+                //System.out.println(textPrimero);
+                    
+                String rest = "POST /respuestas/"+id+" body="+objResultados.toString();
+                System.out.println(rest);
+                Socket socketCaching = new Socket(InetAddress.getByName(ipCaching), Integer.parseInt(puertoCaching));
+                salidaCaching = new DataOutputStream(socketCaching.getOutputStream());
+                salidaCaching.writeBytes(rest);
+                //salidaCaching.writeBytes("POST /respuestas/hola body=<p>hola mundo</>");
                 outToClient.writeBytes(objResultados.toJSONString());
+                socketCaching.close();
             }
         } catch (IOException ex) {
             Logger.getLogger(HiloIndexService.class.getName()).log(Level.SEVERE, null, ex);
@@ -316,7 +345,7 @@ public class HiloIndexService implements Runnable {
                     //Se agrega al arreglo de resultados
                     resultado.add(articuloEnArregloResultado);
                     aux.add(title);
-                    System.out.println(title+" "+score);
+                    //System.out.println(title+" "+score);
                 }
             }
             
@@ -326,7 +355,7 @@ public class HiloIndexService implements Runnable {
                 articulo+=1;
             }
         }
-        System.out.println(resultado.size());
+        //System.out.println(resultado.size());
         return resultado;
     }
 

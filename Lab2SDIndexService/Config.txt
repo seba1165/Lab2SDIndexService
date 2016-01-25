@@ -1,3 +1,5 @@
-cachepartition 5
+cantpartition 5
 cantresult 10
- 
+ipCaching 192.168.1.37
+portCaching 8090
+port 8090

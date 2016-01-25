@@ -21,6 +21,12 @@ public class IndexService {
         ServerSocket acceptSocket;
         String [] LineaParticiones;
         String [] LineaCantResultados;
+        String [] LineaIp;
+        String [] LineaCachingPuerto;
+        String [] LineaPuerto;
+        String ipCaching;
+        String puertoCaching;
+        String puerto;
         int canTpart;
         int cantResult;
         MongoClient mongoClient = new MongoClient();
@@ -42,17 +48,32 @@ public class IndexService {
             //Linea 2 tiene la cantidad de resultados que se desean mostrar como respuesta
             String linea2 = br.readLine();
             LineaCantResultados = linea2.split(" ");
-            cantResult = Integer.parseInt(LineaCantResultados[1]);           
+            cantResult = Integer.parseInt(LineaCantResultados[1]);
+            //Linea 3 obtiene la ip del Caching Service
+            String linea3 = br.readLine();
+            LineaIp = linea3.split(" ");
+            ipCaching = LineaIp[1];
+            //Linea 4 obtiene el puerto del Caching Service
+            String linea4 = br.readLine();
+            LineaCachingPuerto = linea4.split(" ");
+            puertoCaching = LineaCachingPuerto[1];
+            //Linea 5 obtiene el puerto para recibir del Front Service
+            String linea5 = br.readLine();
+            LineaPuerto = linea5.split(" ");
+            puerto = LineaCachingPuerto[1];
             fr.close();
             //Validacion de parametros del config
             //Si los parametros son menores a 1, el caching service no corre
             if(canTpart<1 || cantResult<1){
                 System.out.println("Ingrese los parametros de forma correcta");
             }else{
-                System.out.println("Inicializando CachingService... ");
+                System.out.println("Inicializando Index Service... ");
                 try {
-                    //Socket para el servidor en el puerto 5000
-                    acceptSocket = new ServerSocket(5000);
+                    //Socket para Recibir mensajes del FS
+                    acceptSocket = new ServerSocket(Integer.parseInt(puerto));
+                    Socket socketCaching;
+                    //Socket para enviar al caching
+                    
                     System.out.print("Server is running...");
                     System.out.println("\t[OK]\n");
                     int idSession = 0;
@@ -62,7 +83,7 @@ public class IndexService {
                         connectionSocket = acceptSocket.accept();
                         System.out.println("Nueva conexión entrante: "+connectionSocket);
                         //Por cada conexion, se inicia un hilo
-                        (new Thread (new HiloIndexService(connectionSocket, idSession, db, canTpart, cantResult))).start();
+                        (new Thread (new HiloIndexService(connectionSocket, ipCaching, puertoCaching, idSession, db, canTpart, cantResult))).start();
                         idSession++;
                     }
                 } catch (IOException ex) {
